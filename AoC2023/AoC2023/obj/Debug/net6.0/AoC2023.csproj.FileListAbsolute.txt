@@ -1,0 +1,15 @@
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/bin/Debug/net6.0/AoC2023
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/bin/Debug/net6.0/AoC2023.deps.json
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/bin/Debug/net6.0/AoC2023.runtimeconfig.json
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/bin/Debug/net6.0/AoC2023.dll
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/bin/Debug/net6.0/ref/AoC2023.dll
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/bin/Debug/net6.0/AoC2023.pdb
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.csproj.AssemblyReference.cache
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.GeneratedMSBuildEditorConfig.editorconfig
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.AssemblyInfoInputs.cache
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.AssemblyInfo.cs
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.csproj.CoreCompileInputs.cache
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.dll
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/ref/AoC2023.dll
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.pdb
+/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/obj/Debug/net6.0/AoC2023.genruntimeconfig.cache
