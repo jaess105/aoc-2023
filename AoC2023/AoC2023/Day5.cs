@@ -90,7 +90,13 @@ humidity-to-location map:
         Func<long, long> seedToLocation = SeedToLocationFunc(mapContent);
         ConcurrentBag<long> collector = new();
         var ranges = ints
-            .EvenlyDistribute()
+            // .EvenlyDistribute() // Distributing evenly is not a good idea.
+            // For my input this resulted in 140 < threads which did not improve the performance.
+            .SplitTheLongest(6)
+            .SplitTheLongest(6)
+            .SplitTheLongest(6)
+            .SplitTheLongest(6)
+            .SplitTheLongest(6)
             .OrderBy(tuple => tuple.Item2)
             .ToArray();
         var threads = ranges.Select((startAndLength, i) =>
