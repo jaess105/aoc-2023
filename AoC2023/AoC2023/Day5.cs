@@ -113,14 +113,32 @@ humidity-to-location map:
             thread.Start();
         }
 
-        foreach (var thread in threads)
-        {
-            thread.Join();
-        }
+        LoopJoinThreads(threads);
+
 
         stopwatch.Stop();
         Console.WriteLine($"It took {stopwatch.ElapsedMilliseconds} ms to run.");
         return collector.Min();
+    }
+
+    private static void LoopJoinThreads(Thread[] threads)
+    {
+        var livingThread = true;
+        while (livingThread)
+        {
+            Thread?[] finishedThreads = threads.Where(t => !t.IsAlive).ToArray();
+            for (int i = 0; i < finishedThreads.Length; i++)
+            {
+                var finishedThread = finishedThreads[i];
+                if (finishedThread is null || !finishedThread.Join(10))
+                {
+                    finishedThreads[i] = null;
+                }
+            }
+
+            threads = threads.Except(finishedThreads.WithoutNull()).ToArray();
+            livingThread = threads.Length > 0;
+        }
     }
 
 
@@ -300,5 +318,28 @@ public static class LongLongArrExtensions
         var (start, length) = tuple;
         var half = length / 2;
         return new[] { (start, half), (start + half, length - half) };
+    }
+}
+
+public static class EnumerableExtension
+{
+    /// <summary>
+    /// Filters out all null values from a nullable IEnumerable. Convenience method to remove compiler warnings while
+    /// filtering out all nullable values.
+    /// </summary>
+    /// <remarks>When doing this with a LINQ Where clause the compile does not understand that the type is now non
+    /// nullable and produces a warning. With this method the compiler does understand and the warning disappears.</remarks>
+    /// <param name="self">The IEnumerable of a nullable type.</param>
+    /// <typeparam name="T">The collections type.</typeparam>
+    /// <returns>The same IEnumerable with all null values removed and a non nullable type.</returns>
+    public static IEnumerable<T> WithoutNull<T>(this IEnumerable<T?> self)
+    {
+        foreach (var el in self)
+        {
+            if (el is not null)
+            {
+                yield return el!;
+            }
+        }
     }
 }
