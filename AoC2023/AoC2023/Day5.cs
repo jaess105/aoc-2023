@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AoC2023;
@@ -46,6 +49,12 @@ humidity-to-location map:
         return SolveA(streamReader.ReadToEnd()).ToString();
     }
 
+    public string SolveBFromFile(string filePath)
+    {
+        using var streamReader = new StreamReader(filePath);
+        return SolveB(streamReader.ReadToEnd()).ToString();
+    }
+
     public static void TestA()
     {
         var day5 = new Day5();
@@ -56,30 +65,151 @@ humidity-to-location map:
     private long SolveA(string input)
     {
         var lines = input.Split("\n");
-        var ints = ConstructSeedNums(lines);
+        var ints = ConstructSeedNumsA(lines);
         var mapContent = ConstructMapContent(lines);
 
-        long[] currentVals = ints;
-        foreach (var map in mapContent)
-        {
-            currentVals = currentVals.Select(
-                val =>
-                {
-                    var first = map.FirstOrDefault(mappedTo =>
-                        mappedTo[1] <= val && val <= mappedTo[1] + mappedTo[2] - 1);
-                    if (first == null)
-                    {
-                        return val;
-                    }
+        Func<long, long> seedToLocation = SeedToLocationFunc(mapContent);
 
-                    return first[0] + val - first[1];
-                }).ToArray();
-        }
-
-        return currentVals.Min();
+        return ints.Select(seedToLocation).Min();
     }
 
-    private long[] ConstructSeedNums(string[] lines)
+
+    public static void TestB()
+    {
+        var day5 = new Day5();
+        var solveB = day5.SolveB(TestData);
+        Console.WriteLine(solveB);
+    }
+
+    private long SolveB(string input)
+    {
+        var lines = input.Split("\n");
+        var ints = ConstructSeedNumsB(lines);
+        var mapContent = ConstructMapContent(lines);
+
+        Func<long, long> seedToLocation = SeedToLocationFunc(mapContent);
+        ConcurrentBag<long> collector = new();
+        var ranges = ints
+            .EvenlyDistribute()
+            .OrderBy(tuple => tuple.Item2)
+            .ToArray();
+        var threads = ranges.Select((startAndLength, i) =>
+            new Thread(() => collector.Add(
+                GetMinumalLocationFromSeed(GenerateIntsFromInput(
+                        startAndLength.Item1,
+                        startAndLength.Item2,
+                        i
+                    ),
+                    seedToLocation
+                )
+            ))).ToArray();
+
+
+        Console.Write($"Starting {threads.Length} threads!");
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+        foreach (var thread in threads)
+        {
+            thread.Start();
+        }
+
+        foreach (var thread in threads)
+        {
+            thread.Join();
+        }
+
+        stopwatch.Stop();
+        Console.WriteLine($"It took {stopwatch.ElapsedMilliseconds} ms to run.");
+        return collector.Min();
+    }
+
+
+    private static long GetMinumalLocationFromSeed(IEnumerable<long> ints, Func<long, long> seedToLocation)
+    {
+        return ints.Select(seedToLocation).Min();
+    }
+
+    private static IEnumerable<long> GenerateIntsFromInput(long start, long length, int? threadNum = null)
+    {
+        var end = start + length;
+
+        Console.WriteLine($"Started Sequence {start} until {end}!");
+
+        for (long i = start; i < start + length; i++)
+        {
+            if (i % 10_000_000 == 0)
+            {
+                StringBuilder sb = new();
+                sb.Append($"Completed ")
+                    .Append(i)
+                    .Append("/")
+                    .Append(end)
+                    .Append(", ")
+                    .Append(end - i);
+                if (threadNum is not null)
+                {
+                    sb.Append(" on Thread ").Append(threadNum);
+                }
+
+                sb.Append(" left!");
+                Console.WriteLine(sb);
+            }
+
+            yield return i;
+        }
+
+        Console.WriteLine("Ended Sequence on Thread" + threadNum);
+    }
+
+    private (long, long)[] ConstructSeedNumsB(string[] lines)
+    {
+        var seedNums = lines[0].Split(":")[1]
+            .Split(" ")
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(long.Parse)
+            .Aggregate(new List<List<long>>(),
+                (aggr, x) =>
+                {
+                    if (aggr.Count == 0 || aggr.Last().Count == 2)
+                    {
+                        aggr.Add(new List<long> { x });
+                    }
+                    else
+                    {
+                        aggr.Last().Add(x);
+                    }
+
+                    return aggr;
+                })
+            .Select(l => (l[0], l[1]))
+            .ToArray();
+
+        return seedNums;
+    }
+
+
+    private static Func<long, long> SeedToLocationFunc(IEnumerable<IEnumerable<long[]>> mapContent)
+    {
+        return val =>
+        {
+            foreach (var map in mapContent)
+            {
+                var tmpVal = val;
+                var first = map.FirstOrDefault(mappedTo =>
+                    mappedTo[1] <= tmpVal && tmpVal <= mappedTo[1] + mappedTo[2] - 1);
+                if (first == null)
+                {
+                    continue;
+                }
+
+                val = Math.Abs(first[0] + val - first[1]);
+            }
+
+            return val;
+        };
+    }
+
+    private long[] ConstructSeedNumsA(string[] lines)
     {
         var seedNums = lines[0].Split(":")[1]
             .Split(" ")
@@ -110,9 +240,65 @@ humidity-to-location map:
 
         return mapInputs;
     }
+}
 
-    public string SolveBFromFile(string filePath)
+public static class LongLongArrExtensions
+{
+    public static (long, long)[] EvenlyDistribute(this (long, long)[] self)
     {
-        return "None";
+        var minLength = self.Select(x => x.Item1).Min();
+        bool changed = true;
+        var current = self;
+        while (changed)
+        {
+            changed = false;
+            current = current.SelectMany(tuple =>
+            {
+                if (tuple.Item2 <= minLength)
+                {
+                    return new[] { tuple };
+                }
+
+                changed = true;
+                return Partition(tuple);
+            }).ToArray();
+        }
+
+        return current;
+    }
+
+    public static (long, long)[] SplitTheLongest(this (long, long)[] self, int n)
+    {
+        if (n < 1)
+        {
+            throw new ArgumentException($"N cannot be smaller than 1 but was{n}");
+        }
+
+        var counter = 0;
+        var arr = new (long, long)[self.Length + n];
+        foreach (var tuple in self.OrderByDescending(x => x.Item2))
+        {
+            if (counter < n * 2)
+            {
+                var split = Partition(tuple);
+                Debug.Assert(split[0].Item2 + split[1].Item2 == tuple.Item2);
+                arr[counter++] = split[0];
+                arr[counter++] = split[1];
+            }
+            else
+            {
+                arr[counter++] = tuple;
+            }
+        }
+
+        return arr;
+    }
+
+
+    private static (long, long)[] Partition((long, long) tuple)
+    {
+        var (start, length) = tuple;
+        var half = length / 2;
+        return new[] { (start, half), (start + half, length - half) };
     }
 }
