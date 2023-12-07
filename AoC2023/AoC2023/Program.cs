@@ -6,13 +6,16 @@ const string day3Path = @"/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/re
 const string day4Path = @"/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/resources/day4_input.txt";
 const string day5Path = @"/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/resources/day5_input.txt";
 const string day6Path = @"/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/resources/day6_input.txt";
+const string day7Path = @"/home/jannik/proj/prog/aoc/aoc-2023/AoC2023/AoC2023/resources/day7_input.txt";
+
 
 var arr = new (DaySolution, string)[]
 {
     // (new Day3(), day3Path),
     // (new Day4(), day4Path),
     // (new Day5(), day5Path),
-    (new Day6(), day6Path)
+    // (new Day6(), day6Path),
+    (new Day7(), day7Path)
 };
 
 foreach (var (solution, path) in arr)
